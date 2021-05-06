@@ -4,7 +4,7 @@ pub mod duckbill {
 
     pub type DuckResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
     pub type DuckBill = std::collections::HashMap<Vec<u8>, (usize, usize)>;
-    pub type DuckAcctId = [u8; 12];
+    pub type DuckAcctId = Vec<u8>;
     pub type DuckData = Vec<u8>;
 
     pub struct BillFile {
@@ -74,14 +74,14 @@ pub mod duckbill {
         pub fn chop_to_end(&self, acct_id: &DuckAcctId) -> Option<DuckData> {
             match self.bill_index.get(&acct_id[..]) {
                 None => None,
-                Some(&(start, _)) => Some(self.bill_file[start..].to_owned())
+                Some(&(start, _)) => Some(self.bill_file[start..*self.bill_marks.last().unwrap()].to_owned())
             }
         }
 
         pub fn chop_from_start(&self, acct_id: &DuckAcctId) -> Option<DuckData> {
             match self.bill_index.get(&acct_id[..]) {
                 None => None,
-                Some(&(_, end)) => Some(self.bill_file[0..end].to_owned())
+                Some(&(_, end)) => Some(self.bill_file[1..end].to_owned())
             }
         }
 
@@ -99,5 +99,6 @@ pub mod duckbill {
             let last = last.unwrap().1;
             Some(self.bill_file[first..last].to_owned())
         }
+
     }
 }
