@@ -1,6 +1,5 @@
 pub mod duckbill {
-    use std::fs::File;
-    use std::io::Read;
+    use std::io::{Read, Error};
 
     pub type DuckResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
     pub type DuckBill = std::collections::HashMap<Vec<u8>, (usize, usize)>;
@@ -10,7 +9,8 @@ pub mod duckbill {
     pub struct BillFile {
         bill_file: Vec<u8>,
         bill_marks: Vec<usize>,
-        bill_index: DuckBill
+        bill_index: DuckBill,
+        bill_count: u32
     }
 
     impl BillFile {
@@ -19,13 +19,22 @@ pub mod duckbill {
             let mut bf = BillFile {
                 bill_file: Vec::with_capacity(16_000_000),
                 bill_marks: Vec::new(),
-                bill_index: DuckBill::new()
+                bill_index: DuckBill::new(),
+                bill_count: 0
             };
-            file.read_to_end(&mut bf.bill_file);
-
-            if bf.bill_file.len() < 4000 { // min length sanity check
-                return Err("Too short".into()); //todo better error handling
+            match file.metadata() {
+                Ok(m) => {
+                    if m.len() < 4000 { //min length sanity check
+                        return Err("File is too short to be valid.".into());
+                    }
+                },
+                Err(_) => return Err("Could not obtain file metadata.".into())
+            };
+            match file.read_to_end(&mut bf.bill_file) {
+                Ok(_) => (),
+                Err(_) => return Err("Problem reading file.".into())
             }
+
             const ACCT_STR_BYTES: &[u8; 8] = b"Acct No:";
             const ACCT_STR_BYTES_LEN: usize = ACCT_STR_BYTES.len();
             const ACCT_NUMBER_LEN: usize = b"01-0123456-0".len();
@@ -52,8 +61,28 @@ pub mod duckbill {
                     }
                 }
             }
+            let bill_count_bytes = bf.bill_file[bf.bill_file.len()-7..bf.bill_file.len()-1].to_owned();
+            let bill_count_str = String::from_utf8(bill_count_bytes);
+            let bill_count_parse = match bill_count_str {
+                Ok(b) => b.parse::<u32>(),
+                Err(_) => return Err("Could not find length marker.".into())
+            };
+            bf.bill_count = match bill_count_parse {
+                Ok(b) => b,
+                Err(_) => return Err("Bad format around length marker.".into())
+            };
 
-            Ok(bf)
+            if bf.bill_count != bf.bill_marks.len() as u32 - 2 {
+                Err("Bill mark count does not match listed bill count.".into())
+            }
+            else {
+                Ok(bf)
+            }
+
+        }
+
+        pub fn get_bill_count(&self) -> u32 {
+            self.bill_count
         }
 
         pub fn get_header(&self) -> DuckData {
