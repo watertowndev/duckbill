@@ -1,27 +1,47 @@
 use std::io;
 use std::fs::File;
-use std::io::{Write, Error};
+use std::io::{Read, Write, Error};
 use duckbill::duckbill;
 
 fn main() -> duckbill::DuckResult<()> {
     println!("Welcome to the Just Ducky Second Chance Bill Handler");
-    let mut bill_file = loop {
-        print!("Enter path to file (press enter to exit): ");
-        io::stdout().flush()?;
+    let mut bill_data = Vec::with_capacity(16_000_000);
+    loop {
+        print!("Enter path to file (press enter to exit): "); io::stdout().flush()?;
         let mut file_choice = String::new();
         io::stdin().read_line(&mut file_choice)?;
         if file_choice.trim().len() == 0 {
             return Ok(());
         }
-        let bill_file = File::open(file_choice.trim());
+        let mut bill_file = File::open(file_choice.trim());
         match bill_file {
-            Ok(f) => break f,
-            Err(_) => println!("Could not open {}. Please try again.", file_choice.trim())
+            Ok(mut bf) => {
+                match bf.metadata() {
+                    Ok(m) => {
+                        if m.len() < 4000 { //min length sanity check
+                            println!("That file is too short to be valid.");
+                            continue;
+                        }
+                    },
+                    Err(_) => {
+                        println!("Could not obtain file metadata.");
+                        continue;
+                    }
+                }
+                match bf.read_to_end(&mut bill_data) {
+                    Ok(_) => break,
+                    Err(_) => println!("Unable to read {}.", file_choice.trim())
+                }
+            }
+            Err(_) => {
+                println!("Could not open {}. Please try again.", file_choice.trim());
+                continue;
+            }
         }
     };
 
     println!("Please wait while the file is loaded.");
-    let bills = match duckbill::BillFile::new(&mut bill_file) {
+   let bills = match duckbill::BillFile::new(bill_data) {
         Ok(b) => b,
         Err(e) => {
             println!("Problem with bill file: {}", e);

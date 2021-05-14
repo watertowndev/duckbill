@@ -1,6 +1,4 @@
 pub mod duckbill {
-    use std::io::{Read, Error};
-
     pub type DuckResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
     pub type DuckBill = std::collections::HashMap<Vec<u8>, (usize, usize)>;
     pub type DuckAcctId = Vec<u8>;
@@ -15,25 +13,16 @@ pub mod duckbill {
 
     impl BillFile {
 
-        pub fn new(file: &mut std::fs::File) -> DuckResult<BillFile> {
+        pub fn new(mut file_data: Vec<u8>) -> DuckResult<BillFile> {
+            if file_data.len() < 4000 { //min length sanity check
+                return Err("File is too short to be valid.".into());
+            }
             let mut bf = BillFile {
-                bill_file: Vec::with_capacity(16_000_000),
+                bill_file: file_data,
                 bill_marks: Vec::new(),
                 bill_index: DuckBill::new(),
                 bill_count: 0
             };
-            match file.metadata() {
-                Ok(m) => {
-                    if m.len() < 4000 { //min length sanity check
-                        return Err("File is too short to be valid.".into());
-                    }
-                },
-                Err(_) => return Err("Could not obtain file metadata.".into())
-            };
-            match file.read_to_end(&mut bf.bill_file) {
-                Ok(_) => (),
-                Err(_) => return Err("Problem reading file.".into())
-            }
 
             const ACCT_STR_BYTES: &[u8; 8] = b"Acct No:";
             const ACCT_STR_BYTES_LEN: usize = ACCT_STR_BYTES.len();
