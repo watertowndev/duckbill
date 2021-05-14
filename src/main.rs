@@ -4,52 +4,52 @@ use std::io::{Read, Write, Error};
 use duckbill::duckbill;
 
 fn main() -> duckbill::DuckResult<()> {
+    let mut file_choice: String;
+
+    // Main menu loop
     println!("Welcome to the Just Ducky Second Chance Bill Handler");
-    let mut bill_data = Vec::with_capacity(16_000_000);
-    loop {
+    let bills = loop {
+        file_choice = String::new();
         print!("Enter path to file (press enter to exit): "); io::stdout().flush()?;
-        let mut file_choice = String::new();
         io::stdin().read_line(&mut file_choice)?;
         if file_choice.trim().len() == 0 {
             return Ok(());
         }
-        let mut bill_file = File::open(file_choice.trim());
+
+        let bill_file = File::open(file_choice.trim());
         match bill_file {
+            Err(e) => println!("Error opening file: {}", e),
             Ok(mut bf) => {
                 match bf.metadata() {
+                    Err(e) => println!("Error obtaining metadata: {}", e),
                     Ok(m) => {
-                        if m.len() < 4000 { //min length sanity check
+                        // minimum length sanity check
+                        if m.len() < 4000 {
                             println!("That file is too short to be valid.");
                             continue;
                         }
-                    },
-                    Err(_) => {
-                        println!("Could not obtain file metadata.");
-                        continue;
+                        // maximum length sanity check
+                        if m.len() > 100_000_000 {
+                            println!("That file is too large to be valid.");
+                            continue;
+                        }
+                        println!("File is {} KiB.", m.len()/1024);
+                    }
+                };
+
+                println!("Loading, please wait...");
+                let mut bill_data = Vec::with_capacity(16_000_000);
+                match bf.read_to_end(&mut bill_data) {
+                    Err(e) => println!("Error reading file: {}", e),
+                    Ok(_) => match duckbill::BillFile::new(bill_data) {
+                                Ok(b) => break b,
+                                Err(e) => println!("Problem with bill file: {}", e)
                     }
                 }
-                match bf.read_to_end(&mut bill_data) {
-                    Ok(_) => break,
-                    Err(_) => println!("Unable to read {}.", file_choice.trim())
-                }
-            }
-            Err(_) => {
-                println!("Could not open {}. Please try again.", file_choice.trim());
-                continue;
             }
         }
     };
 
-    println!("Please wait while the file is loaded.");
-   let bills = match duckbill::BillFile::new(bill_data) {
-        Ok(b) => b,
-        Err(e) => {
-            println!("Problem with bill file: {}", e);
-            println!("Contact support. Press enter to continue.");
-            io::stdin().read_line(&mut String::new())?;
-            return Err(e);
-        }
-    };
     println!("File loaded, {} bills found.", bills.get_bill_count());
 
     println!("Available options:");
@@ -99,8 +99,12 @@ fn main() -> duckbill::DuckResult<()> {
     };
     data.append(&mut bills.get_footer());
 
-    let mut o = File::create("TEST_OUT")?;
+    let mut output_file = String::from(file_choice.trim());
+    output_file.push_str(".DUCKED");
+
+    let mut o = File::create(output_file)?;
     o.write_all(&data);
+    println!("Your processed file is ready: {}", output_file);
 
     Ok(())
 }
