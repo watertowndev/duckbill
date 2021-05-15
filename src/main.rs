@@ -68,30 +68,30 @@ fn main() -> duckbill::DuckResult<()> {
                 Ok(a) => a,
                 Err(e) => return Err(e)
             };
-            data.append(&mut bills.chop_to_end(&s).unwrap());
+            data.append(&mut bills.chop_to_end(&s).unwrap()); // todo: handle "bill not found"
         },
         "2" => {
             let s = match get_acct_id("Account ID (for example, 01-0123456-0): ") {
                 Ok(a) => a,
-                Err(e) => return Err(e)
+                Err(e) => return Ok(())
             };
             data.append(&mut bills.chop_from_start(&s).unwrap());
         },
         "3" => {
             let s = match get_acct_id("Beginning Account ID (for example, 01-0123456-0): ") {
                 Ok(a) => a,
-                Err(e) => return Err(e)
+                Err(e) => return Ok(())
             };
             let e = match get_acct_id("Ending Account ID (for example, 01-0123456-0): ") {
                 Ok(a) => a,
-                Err(e) => return Err(e)
+                Err(e) => return Ok(())
             };
             data.append(&mut bills.chop_range(&s, &e).unwrap());
         }
         "4" => {
             let s = match get_acct_id("Account ID (for example, 01-0123456-0): ") {
                 Ok(a) => a,
-                Err(e) => return Err(e)
+                Err(e) => return Ok(())
             };
             data.append(&mut bills.chop_single_bill(&s).unwrap());
         } ,
@@ -102,7 +102,7 @@ fn main() -> duckbill::DuckResult<()> {
     let mut output_file = String::from(file_choice.trim());
     output_file.push_str(".DUCKED");
 
-    let mut o = File::create(output_file)?;
+    let mut o = File::create(&output_file)?;
     o.write_all(&data);
     println!("Your processed file is ready: {}", output_file);
 
@@ -110,9 +110,30 @@ fn main() -> duckbill::DuckResult<()> {
 }
 
 fn get_acct_id(prompt: &str) -> duckbill::DuckResult<duckbill::DuckAcctId> {
-    print!("{}", prompt); io::stdout().flush()?;
-    let mut id = String::new();
-    std::io::stdin().read_line(&mut id)?;
-    Ok(id.trim().as_bytes().to_owned())
-//todo: this needs validation lol
+    'input_loop: loop {
+        print!("{}", prompt); io::stdout().flush()?;
+        let mut id = String::new();
+        std::io::stdin().read_line(&mut id)?;
+        // account ID format is 01-0123456-0
+        // plus one newline equals 13
+        if id.len() >= 13 {
+            let id_bytes = id.trim().as_bytes().to_owned();
+            let positions = [0, 1, 3, 4, 5, 6, 7, 8, 9, 11];
+            for &p in positions.iter() {
+                if !is_ascii_number(id_bytes[p]){
+                    continue 'input_loop;
+                }
+            }
+            break Ok(id_bytes)
+        }
+        else {
+            if id.len() == 1 {
+                break Err("Cancelling.".into())
+            }
+        }
+    }
+}
+
+fn is_ascii_number(b: u8) -> bool {
+    b >= 48 && b <= 57
 }
