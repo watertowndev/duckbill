@@ -66,7 +66,7 @@ fn main() -> duckbill::DuckResult<()> {
         "1" => {
             let s = match get_acct_id("Account ID (for example, 01-0123456-0): ") {
                 Ok(a) => a,
-                Err(e) => return Err(e)
+                Err(e) => return Ok(())
             };
             data.append(&mut bills.chop_to_end(&s).unwrap()); // todo: handle "bill not found"
         },
@@ -124,11 +124,11 @@ fn get_acct_id(prompt: &str) -> duckbill::DuckResult<duckbill::DuckAcctId> {
                     continue 'input_loop;
                 }
             }
-            break Ok(id_bytes)
+            break Ok(id_bytes);
         }
         else {
             if id.len() == 1 {
-                break Err("Cancelling.".into())
+                break Err("Cancelling.".into());
             }
         }
     }

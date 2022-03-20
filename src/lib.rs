@@ -118,5 +118,8 @@ pub mod duckbill {
             Some(self.bill_file[first..last].to_owned())
         }
 
+        pub fn bill_exists(&self, acct_id: &DuckAcctId) -> bool {
+            self.bill_index.contains_key(&acct_id[..])
+        }
     }
 }
