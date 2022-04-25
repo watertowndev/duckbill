@@ -26,6 +26,7 @@ fn main() -> Result<(), DuckError> {
     let mut output_filename = PathBuf::new();
 
     println!("Welcome to the Just Ducky Second Chance Bill Handler");
+    println!("====================================================");
     // main menu ui loop
     loop {
         main_menu.set_choice_avail("2", file_ready).expect("Menu 2 avail error");
@@ -33,13 +34,16 @@ fn main() -> Result<(), DuckError> {
         main_menu.set_choice_avail("4", file_ready).expect("Menu 4 avail error");
         main_menu.set_choice_avail("5", file_ready).expect("Menu 5 avail error");
 
-        println!("\nMain Menu\n{}", main_menu);
-        print!("Enter choice (anything else to quit): ");
+        println!("\nMain Menu");
+        println!("=========");
+        println!("{}", main_menu);
+        print!("Select number (q to quit): ");
         io::stdout().flush()?;
         let mut choice = String::new();
         std::io::stdin().read_line(&mut choice)?;
 
         if !main_menu.valid_choice(&choice.trim()) {
+            println!("Bye!");
             return Ok(());
         }
         println!("");
@@ -49,6 +53,7 @@ fn main() -> Result<(), DuckError> {
             "1" => {
                 let mut file_choice: Option<PathBuf> = None;
                 #[cfg(feature="native-ui")] {
+                    println!("Use the dialog to select a file.");
                     let dialog_sel = FileDialog::new()
                             .set_location("~")
                             .show_open_single_file();
