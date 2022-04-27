@@ -281,7 +281,9 @@ mod tests {
     fn bill_count_shenanigans() {
         let mut quack = get_test_data();
 
-        assert!(quack.set_bill_count(69_420).is_ok());
+        let footer = DuckFile::get_arbitrary_footer(69_420);
+        assert!(footer.is_ok());
+        quack.footer = footer.unwrap();
         let data2: DuckData = quack.into();
         //data2 contains a mismatched bill count
         let broken: Result<DuckFile, DuckError> = DuckData::new(data2.into()).try_into();
