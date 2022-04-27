@@ -1,3 +1,4 @@
+//!DuckData is a thin wrapper around Vec<u8> to allow for type checking and minor features.
 use std::ops::{Index};
 use std::slice::SliceIndex;
 
@@ -7,23 +8,30 @@ pub struct DuckData {
 }
 
 impl DuckData {
+    /// Get the length of the data contained
     pub fn len(&self) -> usize {
         self.my_data.len()
     }
+
+    /// Test if data structure is empty or not
     pub fn is_empty(&self) -> bool {
         self.my_data.is_empty()
     }
 
+    /// Produces an empty structure
     pub fn new(data: Vec<u8>) -> DuckData {
         DuckData{
             my_data: data
         }
     }
 
+    /// Moves the provided data to the end of the data already contained.
+    /// Uses Vec::append to accomplish this
     pub fn push(&mut self, mut data: DuckData) {
         self.my_data.append(&mut data.my_data)
     }
 
+    /// Tests if a byte value is within the range that corresponds to ASCII numerals
     pub fn is_ascii_number(b: u8) -> bool {
         (48..=57).contains(&b)
     }
