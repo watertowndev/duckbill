@@ -1,7 +1,7 @@
 use std::io;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use duckbill::duckfile;
 use duckbill::duckfile::duckacctid::DuckAcctId;
 use duckbill::duckfile::duckbill::DuckBill;
@@ -80,7 +80,9 @@ fn main() -> Result<(), DuckError> {
                         println!("{} bills found", original_bills.get_bill_count());
                         main_menu.add_entry("1", &format!("Select bill file (Current: {}, {} bills)", filepath.to_str().unwrap_or("Non-displayable file!"), original_bills.get_bill_count()), true);
 
-                        output_filename = filepath.with_extension("DUCKED");
+                        let mut outfilestr = filepath.into_os_string();
+                        outfilestr.push(".DUCKED");//append our signature extension
+                        output_filename = PathBuf::from(outfilestr);
                     }
                 }
                 else {
