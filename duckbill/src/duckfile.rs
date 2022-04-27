@@ -1,4 +1,5 @@
-//pub mod billfile;
+//! Implement a structure representing a typical bill file
+//! Such a file contains a header, one or more bills, and a footer with bill count
 pub mod duckdata;
 pub mod duckacctid;
 pub mod duckbill;
@@ -12,7 +13,7 @@ use crate::duckfile::duckbill::DuckBill;
 use duckdata::DuckData;
 use crate::duckfile::duckacctid::DuckAcctId;
 
-
+///Any bill starts with these bytes
 const RECORD_MARK_BYTES: &[u8;3] = &[0x1bu8, 0x45u8, 0x0du8];
 
 pub type DuckMark = usize;
@@ -31,6 +32,8 @@ impl DuckFile {
     const NOMINAL_FOOTER_COUNT_LEN: usize = 6;
     const NOMINAL_FOOTER_LEN: usize = DuckFile::NOMINAL_FOOTER_PRE_LEN + DuckFile::NOMINAL_FOOTER_COUNT_LEN + DuckFile::NOMINAL_FOOTER_POST_LEN;
 
+    /// Produces a DuckFile with header, footer, and no bills between.
+    /// This is of limited utility, but won't produce errors if used in the typical fashion
     pub fn new() -> DuckFile {
         DuckFile {
             header: DuckFile::get_static_header(),
@@ -40,12 +43,15 @@ impl DuckFile {
         }
     }
 
+    /// Get the static header found at the start of every bill file
     fn get_static_header() -> DuckData {
         DuckData::new(vec![0x1bu8, 0x26u8, 0x6cu8, 0x36u8, 0x44u8, 0x0du8, 0x1bu8, 0x28u8, 0x73u8,
                            0x31u8, 0x50u8, 0x1bu8, 0x28u8, 0x73u8, 0x35u8, 0x54u8, 0x1bu8, 0x28u8,
                            0x73u8, 0x31u8, 0x30u8, 0x56u8, 0x0du8]
         )
     }
+
+    /// Get the static part of the footer that precedes the bill count value
     fn get_static_footer_pre() -> DuckData {
         DuckData::new(vec![
             0x1bu8, 0x45u8, 0x0du8, 0x1bu8, 0x45u8, 0x0du8, 0x0au8, 0x2au8, 0x2au8, 0x2au8, 0x2au8,
@@ -54,10 +60,13 @@ impl DuckFile {
             0x20u8, 0x20u8, 0x20u8,
         ])
     }
+
+    /// Get the static part of the footer that follows the bill count value
     fn get_static_footer_post() -> DuckData {
         DuckData::new(vec![0x0du8])
     }
 
+    /// Generate a footer with an arbitrary (0-999,999) bill count value
     fn get_arbitrary_footer(count: u32) -> Result<DuckData, DuckError> {
         if count > 999_999 {
             Err(DuckError::BillCountOutOfBounds)
@@ -71,19 +80,23 @@ impl DuckFile {
         }
     }
 
-
+    /// Get the number of bills found
     pub fn get_bill_count(&self) -> usize {
         self.bills.len()
     }
 
+    /// Get the index of a bill with the provided account number
+    // TODO: this exposes too much of the inner workings; is there a better way?
     pub fn get_index_of_account(&self, acct: &DuckAcctId) -> Option<usize> {
         self.bills.iter().position(|a| a.get_account_id() == acct)
     }
 
+    /// Get the header associated with this bill file
     pub fn get_header(&self) -> &DuckData {
         &self.header
     }
 
+    /// Get the footer associated with this bill file
     pub fn get_footer(&self) -> &DuckData {
         &self.footer
     }
@@ -99,9 +112,12 @@ where I: SliceIndex<[DuckBill]>
     }
 }
 
+/// Convert raw DuckData into a DuckFile structure
 impl TryFrom<DuckData> for DuckFile {
     type Error = DuckError;
 
+    /// Attempts to construct a DuckFile from the data provided
+    /// Checks for basic structural elements
     fn try_from(data: DuckData) -> Result<Self, Self::Error> {
         if data.len() < 4000 {
             //min length sanity check
@@ -174,9 +190,12 @@ impl TryFrom<DuckData> for DuckFile {
     }
 }
 
+/// Given a Vec of DuckBills, create a new duckfile
 impl TryFrom<Vec<DuckBill>> for DuckFile {
     type Error = DuckError;
 
+    /// Create a DuckFile from a Vec of DuckBills
+    /// Adds header and footer as needed
     fn try_from(bills: Vec<DuckBill>) -> Result<Self, Self::Error> {
         let mut data = DuckFile::get_static_header();
         let bill_count = bills.len() as u32;
