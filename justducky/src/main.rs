@@ -117,7 +117,14 @@ fn main() -> Result<(), DuckError> {
                 let end_idx = original_bills.get_index_of_account(&e);
 
                 if start_idx.is_some() && end_idx.is_some() {
-                    let sel = &original_bills[start_idx.unwrap()..=end_idx.unwrap()];
+                    let (start, end) = if start_idx.unwrap() > end_idx.unwrap() {
+                        println!("End is before start, swapping...");
+                        (end_idx.unwrap(), start_idx.unwrap())
+                    }
+                    else {
+                        (start_idx.unwrap(), end_idx.unwrap())
+                    };
+                    let sel = &original_bills[start..=end];
                     create_output_file(&output_filename, sel.to_vec())?;
                 }
                 else {
