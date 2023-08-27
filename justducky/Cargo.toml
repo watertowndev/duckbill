@@ -8,9 +8,10 @@ edition = "2021"
 [dependencies]
 duckbill = {path = "../duckbill"}
 m_menu = { path = "../m_menu"}
+iced = {version = "0.10.0", optional = true}
 native-dialog = { version = "0.6.4", optional = true}
 
 [features]
 default = []
-native-ui = ["native-dialog"]
+gui = ["native-dialog", "iced"]
 
