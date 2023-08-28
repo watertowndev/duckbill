@@ -52,7 +52,7 @@ pub fn tui() -> Result<(), DuckError> {
                 let mut file_input = String::new();
                 io::stdin().read_line(&mut file_input)?;
 
-                match state.load_file(&file_input.trim()) {
+                match state.load_file_str(&file_input.trim()) {
                     Ok(_) => {
                         println!("{} bills found", state.original_bills.get_bill_count());
                     }

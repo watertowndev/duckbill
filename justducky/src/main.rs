@@ -1,12 +1,24 @@
-use duckbill::duckfile::duckerror::DuckError;
+use std::error::Error;
 
+#[cfg(not(feature="gui"))]
 mod tui;
-mod applogic;
-
+#[cfg(not(feature="gui"))]
 use crate::tui::tui;
 
+#[cfg(feature="gui")]
+mod gui;
+#[cfg(feature="gui")]
+use crate::gui::gui;
 
-fn main() -> Result<(), DuckError> {
-    tui()
+mod applogic;
+
+
+fn main() {
+
+    #[cfg(feature="gui")]
+    gui();
+    #[cfg(not(feature="gui"))]
+    tui();
+
 }
 

@@ -45,16 +45,18 @@ impl AppLogic {
         &self.state
     }
 
-    pub fn load_file(&mut self, file_path: &str) -> Result<(),()> {
+    pub fn load_file_str(&mut self, file_path: &str) -> Result<(),()> {
         let file_pb = PathBuf::from(file_path);
-
+        self.load_file_pathbuf(&file_pb)
+    }
+    pub fn load_file_pathbuf(&mut self, file_pb: &PathBuf) -> Result<(),()> {
         match AppLogic::try_loading_billfile(&file_pb) {
             Ok(ob) => {
                 let mut outfilestr = file_pb.clone().into_os_string();
                 outfilestr.push(".DUCKED");//append our signature extension
                 self.output_file_path = Some(PathBuf::from(outfilestr));
 
-                self.file_path = Some(file_pb);
+                self.file_path = Some(file_pb.clone());
                 self.original_bills = ob;
                 self.change_state(AppState::FileReady);
                 Ok(())
