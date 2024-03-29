@@ -1,7 +1,11 @@
-use std::io;
 use std::fs::File;
+use std::io;
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+#[cfg(feature="native-ui")]
+use native_dialog::FileDialog;
+
 use duckbill::duckfile;
 use duckbill::duckfile::duckacctid::DuckAcctId;
 use duckbill::duckfile::duckbill::DuckBill;
@@ -9,9 +13,6 @@ use duckbill::duckfile::duckdata::DuckData;
 use duckbill::duckfile::duckerror::DuckError;
 use duckfile::DuckFile;
 use m_menu::MMenu;
-#[cfg(feature="native-ui")]
-use native_dialog::FileDialog;
-
 
 fn main() -> Result<(), DuckError> {
     let mut main_menu = MMenu::new();
@@ -200,6 +201,8 @@ fn create_output_file(filename: &PathBuf, bill_sel: Vec<DuckBill>) -> Result<(),
     let processed_file: DuckFile = bill_sel.try_into()?;
     let new_data: DuckData = processed_file.into();
     if o.write(new_data.as_ref()).is_ok() {
+        println!("Working...");
+        println!();
         println!("Your processed file is ready: {}", filename.to_str().unwrap_or("Undisplayable filename. Nice work."));
         return Ok(())
     }
