@@ -17,9 +17,9 @@ use m_menu::MMenu;
 fn main() -> Result<(), DuckError> {
     let mut main_menu = MMenu::new();
     main_menu.add_entry("1", "Select bill file", true);
-    main_menu.add_entry("2", "Chop to end (resume print job)", false);
-    main_menu.add_entry("3", "Chop from start", false);
-    main_menu.add_entry("4", "Chop range of bills", false);
+    main_menu.add_entry("2", "Skip from start to specified bill (resume print job)", false);
+    main_menu.add_entry("3", "Skip from specified bill to end", false);
+    main_menu.add_entry("4", "Extract range of bills", false);
     main_menu.add_entry("5", "Extract single bill", false);
 
     let mut file_ready = false;
@@ -93,7 +93,7 @@ fn main() -> Result<(), DuckError> {
                 }
             },
             "2" => {
-                let s = get_acct_id("Account ID (for example, 01-0123456-0): ")?;
+                let s = get_acct_id("Account ID of first bill to keep (for example, 01-0123456-0): ")?;
                 if let Some(sel) = original_bills.get_index_of_account(&s).map(|bill_idx| &original_bills[bill_idx..]) {
                     create_output_file(&output_filename, sel.to_vec())?;
                 }
@@ -102,7 +102,7 @@ fn main() -> Result<(), DuckError> {
                 }
             },
             "3" => {
-                let s = get_acct_id("Account ID (for example, 01-0123456-0): ")?;
+                let s = get_acct_id("Account ID of last bill to keep (for example, 01-0123456-0): ")?;
                 if let Some(sel) = original_bills.get_index_of_account(&s).map(|bill_idx| &original_bills[..=bill_idx]) {
                     create_output_file(&output_filename, sel.to_vec())?;
                 }
@@ -111,8 +111,8 @@ fn main() -> Result<(), DuckError> {
                 }
             },
             "4" => {
-                let s = get_acct_id("Beginning Account ID (for example, 01-0123456-0): ")?;
-                let e = get_acct_id("Ending Account ID (for example, 01-0123456-0): ")?;
+                let s = get_acct_id("Account ID of starting bill (for example, 01-0123456-0): ")?;
+                let e = get_acct_id("Account ID of ending bill (for example, 01-0123456-0): ")?;
 
                 let start_idx = original_bills.get_index_of_account(&s);
                 let end_idx = original_bills.get_index_of_account(&e);
@@ -133,7 +133,7 @@ fn main() -> Result<(), DuckError> {
                 }
             }
             "5" => {
-                let s = get_acct_id("Account ID (for example, 01-0123456-0): ")?;
+                let s = get_acct_id("Account ID of bill (for example, 01-0123456-0): ")?;
                 if let Some(sel) = original_bills.get_index_of_account(&s).map(|bill_idx| &original_bills[bill_idx..=bill_idx]) {
                     create_output_file(&output_filename, sel.to_vec())?;
                 }
