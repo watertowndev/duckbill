@@ -4,7 +4,7 @@ version = "0.2.0"
 edition = "2021"
 description = "Just Ducky Second Chance Bill Handler"
 license = "MIT"
-authors = ["Maxwell French <mfrench@watertown-ny.gov>"]
+authors = ["Maxweturesll French <mfrench@watertown-ny.gov>"]
 build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -23,6 +23,6 @@ native-ui = ["native-dialog"]
 winresource = "0.1.17"
 
 [package.metadata.winresource]
-OriginalFilename = "duckbill.exe"
+OriginalFilename = "justducky.exe"
 LegalCopyright = "Copyright © 2024 Maxwell French"
 FileDescription = "Just Ducky Second Chance Bill Handler"
