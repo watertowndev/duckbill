@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use duckbill::duckfile::duckerror::DuckError;
-use iced::{Element, Error, Font, Sandbox, Settings};
+use iced::{Element, Error, Font,  Settings, Pixels};
 use iced::widget::{Button, Text, Column, Container, Row, TextInput, text_input};
 use native_dialog::{FileDialog, MessageDialog};
 use duckbill::duckfile::duckacctid::DuckAcctId;
@@ -42,9 +42,12 @@ struct AppUIState {
     bill_input_a_status: InputStatus,
     bill_input_b_status: InputStatus,
 }
-
-impl Sandbox for AppUIState {
-    type Message = AppStateMsg;
+impl Default for AppUIState {
+    fn default() -> Self {
+        AppUIState::new()
+    }
+}
+impl AppUIState {
 
     fn new() -> Self {
         AppUIState {
@@ -62,7 +65,7 @@ impl Sandbox for AppUIState {
         String::from("Just Ducky")
     }
 
-    fn update(&mut self, message: Self::Message) {
+    fn update(&mut self, message: AppStateMsg) {
         match message {
             AppStateMsg::PickFile => {
                 self.pick_file();
@@ -133,7 +136,7 @@ impl Sandbox for AppUIState {
         }
     }
 
-    fn view(&self) -> Element<'_, Self::Message> {
+    fn view(&self) -> Element<'_, AppStateMsg> {
         let header = Text::new("Choose an option");
         let button_pickfile = Button::new("Choose file...").width(250).on_press(AppStateMsg::PickFile);
         let current_filename = match &self.picked_file {
@@ -150,7 +153,7 @@ impl Sandbox for AppUIState {
             .icon(text_input::Icon {
                 font: Font::default(),
                 code_point: AppUIState::get_icon(&self.bill_input_a_status),
-                size: Some(24.0),
+                size: Some(Pixels(24.0)),
                 spacing: 10.0,
                 side: text_input::Side::Right,
             });
@@ -159,7 +162,7 @@ impl Sandbox for AppUIState {
             .icon(text_input::Icon {
                 font: Font::default(),
                 code_point: AppUIState::get_icon(&self.bill_input_b_status),
-                size: Some(24.0),
+                size: Some(Pixels(24.0)),
                 spacing: 10.0,
                 side: text_input::Side::Right,
             });
@@ -177,7 +180,7 @@ impl Sandbox for AppUIState {
             .push(button_duck_it)
             .spacing(20);
 
-        Container::new(col).center_x().center_y().width(1000).height(300).into()
+        Container::new(col).center_x(1000).center_y(1000).into()
     }
 }
 impl AppUIState {
@@ -257,7 +260,7 @@ impl AppUIState {
 }
 
 pub fn gui() -> Result<(), Error> {
-    AppUIState::run(Settings::default())
+    iced::run("test", AppUIState::update, AppUIState::view)
 }
 /*
 println!("Use the dialog to select a file.");
